@@ -8,6 +8,13 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+// Include PHPMailer
+require 'vendor/autoload.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
 // Set content type to JSON
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -73,24 +80,38 @@ class EmailService {
      * Send email using Gmail SMTP
      */
     public function sendEmail($to, $subject, $message) {
-        $headers = [
-            'MIME-Version: 1.0',
-            'Content-type: text/html; charset=UTF-8',
-            'From: ' . $this->config['from_name'] . ' <' . $this->config['from_email'] . '>',
-            'Reply-To: ' . $this->config['from_email'],
-            'X-Mailer: PHP/' . phpversion()
-        ];
-        
-        // For development, we'll simulate email sending
-        // In production, you would use a proper SMTP library like PHPMailer
-        
-        // Log the email for debugging
-        error_log("EMAIL SENT TO: {$to}");
-        error_log("SUBJECT: {$subject}");
-        error_log("MESSAGE: {$message}");
-        
-        // Simulate successful email sending
-        return true;
+        $mail = new PHPMailer(true);
+
+        try {
+            // Server settings
+            $mail->isSMTP();
+            $mail->Host       = $this->config['smtp_host'];
+            $mail->SMTPAuth   = true;
+            $mail->Username   = $this->config['smtp_user'];
+            $mail->Password   = $this->config['smtp_pass'];
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = $this->config['smtp_port'];
+
+            // Recipients
+            $mail->setFrom($this->config['from_email'], $this->config['from_name']);
+            $mail->addAddress($to);
+
+            // Content
+            $mail->isHTML(true);
+            $mail->Subject = $subject;
+            $mail->Body    = $message;
+
+            $result = $mail->send();
+            
+            // Log success
+            error_log("EMAIL SUCCESSFULLY SENT TO: {$to}");
+            
+            return $result;
+        } catch (Exception $e) {
+            // Log error
+            error_log("EMAIL FAILED TO: {$to} - Error: {$mail->ErrorInfo}");
+            return false;
+        }
     }
     
     /**
