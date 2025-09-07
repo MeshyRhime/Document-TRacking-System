@@ -1,0 +1,195 @@
+/* Custom color scheme: #ff9966 #ffb380 #e68553 */
+:root {
+    --primary-orange: #ff9966;
+    --light-orange: #ffb380;
+    --dark-orange: #e68553;
+    --white: #ffffff;
+    --light-gray: #f8f9fa;
+    --text-dark: #212529;
+}
+
+body {
+    background: linear-gradient(135deg, var(--light-orange), var(--primary-orange));
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+}
+
+.card {
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--primary-orange), var(--dark-orange));
+    color: var(--white);
+    border-radius: 15px 15px 0 0 !important;
+    border: none;
+}
+
+.text-primary {
+    color: var(--white) !important;
+}
+
+.btn-primary {
+    background-color: var(--primary-orange);
+    border-color: var(--primary-orange);
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: var(--dark-orange);
+    border-color: var(--dark-orange);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 153, 102, 0.4);
+}
+
+.btn-outline-primary {
+    color: var(--primary-orange);
+    border-color: var(--primary-orange);
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.btn-outline-primary:hover, .btn-outline-primary.active {
+    background-color: var(--primary-orange);
+    border-color: var(--primary-orange);
+    color: var(--white);
+}
+
+.btn-outline-secondary {
+    color: var(--dark-orange);
+    border-color: var(--dark-orange);
+    border-radius: 8px;
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--dark-orange);
+    border-color: var(--dark-orange);
+    color: var(--white);
+}
+
+.btn-secondary {
+    background-color: var(--light-orange);
+    border-color: var(--light-orange);
+    color: var(--text-dark);
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.btn-secondary:hover {
+    background-color: var(--dark-orange);
+    border-color: var(--dark-orange);
+    color: var(--white);
+}
+
+.btn-success {
+    background-color: var(--dark-orange);
+    border-color: var(--dark-orange);
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.btn-success:hover {
+    background-color: #d47a47;
+    border-color: #d47a47;
+}
+
+.form-control, .form-select {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-orange);
+    box-shadow: 0 0 0 0.2rem rgba(255, 153, 102, 0.25);
+}
+
+.form-label {
+    color: var(--text-dark);
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.form-label i {
+    color: var(--primary-orange);
+}
+
+.nav-btn.active {
+    background-color: var(--primary-orange) !important;
+    border-color: var(--primary-orange) !important;
+    color: var(--white) !important;
+}
+
+.alert {
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.alert-success {
+    background-color: rgba(230, 133, 83, 0.1);
+    color: var(--dark-orange);
+    border-left: 4px solid var(--dark-orange);
+}
+
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border-left: 4px solid #dc3545;
+}
+
+.alert-info {
+    background-color: rgba(255, 179, 128, 0.1);
+    color: var(--dark-orange);
+    border-left: 4px solid var(--light-orange);
+}
+
+.input-group .btn {
+    border: 2px solid #e9ecef;
+    border-left: none;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-orange);
+    border-color: var(--primary-orange);
+}
+
+.form-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+/* Animation for view transitions */
+.view-container {
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.view-container.fade-out {
+    opacity: 0;
+}
+
+/* Loading spinner styles */
+.spinner-border {
+    color: var(--primary-orange);
+}
+
+/* Disabled button styles */
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Card body padding adjustment for mobile */
+@media (max-width: 576px) {
+    .card-body {
+        padding: 2rem 1.5rem;
+    }
+    
+    .col-md-6 {
+        margin-bottom: 1rem;
+    }
+}
