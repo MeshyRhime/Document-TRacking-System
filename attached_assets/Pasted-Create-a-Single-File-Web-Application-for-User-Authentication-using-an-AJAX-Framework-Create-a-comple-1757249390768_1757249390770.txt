@@ -1,0 +1,71 @@
+Create a Single-File Web Application for User Authentication using an AJAX Framework Create a complete, self-contained HTML file for a web application that handles user authentication for a document tracking system. The entire application—including all HTML, CSS, and JavaScript—must be contained within a single index.html file.
+
+The application should have two main views: a Login Page and a Sign-Up Page. Use Tailwind CSS for all styling, loaded via a CDN, to ensure a clean, modern, and responsive design.
+
+Authentication Requirements The application must implement the following authentication logic, using an AJAX-like framework simulated with JavaScript's fetch API. All messages should be shown to the user on the screen.
+
+Sign-Up Page (/signup) User Information:
+Provide input fields for:
+
+First Name
+
+Last Name
+
+Address
+
+ID Number
+
+Department
+
+Year
+
+Email
+
+Username (for login)
+
+Password
+
+Email Verification:
+
+Include a "Send Verification Code" button next to the email field. Clicking this button should simulate an asynchronous request to send a code and display a message like "Verification code sent to your email!".
+
+Create a new input field for the user to enter the verification code.
+
+Final Sign-Up:
+
+Include a "Sign Up" button. This button should be enabled only after the user has successfully entered the correct verification code.
+
+Login Page (/login) The login process must follow a multi-step flow.
+Step 1: Username & Password
+
+Provide input fields for Username and Password.
+
+A "Login" button should validate these credentials via a simulated AJAX call. If the credentials are correct, it should hide this form and reveal the next step.
+
+Step 2: Two-Factor Authentication Choice
+
+After successful username and password validation, a new section should appear with a radio button option:
+
+Get 6-digit OTP (via Email)
+
+A "Continue" button should proceed based on this selection.
+
+Step 3: OTP Authentication
+
+If the "OTP" radio button was chosen, an input field for a 6-digit code should appear, along with a "Send OTP" button.
+
+Clicking "Send OTP" should trigger a simulated AJAX call to send a 6-digit code to the user's registered email address.
+
+The user then enters the code, and a final "Verify" button simulates the final login via AJAX.
+
+Database and Code Structure Use a JavaScript object or array to simulate a database for user data. Each user object should store their username, password, email, firstName, lastName, address, idNumber, department, and year.
+
+Include a separate db object to manage the user data.
+
+Use a state variable to manage the different views and login steps (login-step1, login-step2, otp-view, signup-view).
+
+Include comprehensive comments throughout the JavaScript code to explain each logical step of the authentication process.
+
+SQL Code Additionally, provide the SQL code for creating the users table that this application would interact with.
+
+css and javascript files should be separated from html just link it, year is only till 5th year, add proper icons to each field especially at password add an eye icon to see the password, limit the password to 8 - 12 characters combination of letters, numbers and special characters use bootstrap to design : this is the color scheme: #ff9966 #ffb380 #e68553
