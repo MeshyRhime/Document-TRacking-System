@@ -21,7 +21,7 @@ CREATE TABLE otp_codes (
     email VARCHAR(255) NOT NULL,
     otp_code VARCHAR(6) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP NOT NULL,
+    expires_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP + INTERVAL 10 MINUTE),
     used BOOLEAN DEFAULT FALSE
 );
 
@@ -29,3 +29,5 @@ CREATE TABLE otp_codes (
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_otp_email ON otp_codes(email);
+CREATE INDEX idx_otp_expires ON otp_codes(expires_at);
+CREATE INDEX idx_otp_used ON otp_codes(used);

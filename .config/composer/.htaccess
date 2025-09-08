@@ -1,0 +1,14 @@
+# Allow access to PHP, HTML, JS, CSS files
+<FilesMatch "\.(php|html|js|css)$">
+    Require all granted
+</FilesMatch>
+
+# If PHP files are blocked globally, force allow for auth.php
+<Files "auth.php">
+    Require all granted
+</Files>
+
+# Optional: secure .htaccess itself
+<Files ".htaccess">
+    Require all denied
+</Files>

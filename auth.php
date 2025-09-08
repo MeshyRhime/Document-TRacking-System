@@ -29,10 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // Database configuration for MySQL
 $db_host = 'localhost';
 $db_port = '3306';
-$db_name = 'auth_db';
+$db_name = 'dts_db';
 $db_user = 'root';
 $db_pass = '';
-$db_socket = '/tmp/mysql.sock';
 
 // Email configuration
 $email_config = [
