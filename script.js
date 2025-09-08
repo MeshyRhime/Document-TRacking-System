@@ -9,7 +9,9 @@ const AppState = {
     currentStep: 'login-step1',
     isEmailVerified: false,
     currentUser: null,
-    otpSent: false
+    otpSent: false,
+    otpTimer: null,
+    verificationTimer: null
 };
 
 // DOM elements cache
@@ -26,17 +28,27 @@ const elements = {
     otpStep: document.getElementById('otp-step'),
     continueAuthBtn: document.getElementById('continue-auth'),
     sendOtpBtn: document.getElementById('send-otp'),
+    resendOtpBtn: document.getElementById('resend-otp'),
     verifyOtpBtn: document.getElementById('verify-otp'),
+    rememberMeCheckbox: document.getElementById('remember-me'),
+    forgotPasswordLink: document.getElementById('forgot-password-link'),
     
     // Signup elements
     signupForm: document.getElementById('signup-form'),
     sendVerificationBtn: document.getElementById('send-verification'),
+    resendVerificationBtn: document.getElementById('resend-verification'),
     verificationCodeSection: document.getElementById('verification-code-section'),
     signupBtn: document.getElementById('signup-btn'),
     
     // Password toggle buttons
     toggleLoginPassword: document.getElementById('toggle-login-password'),
-    toggleSignupPassword: document.getElementById('toggle-signup-password')
+    toggleSignupPassword: document.getElementById('toggle-signup-password'),
+    
+    // Forgot password modal
+    forgotPasswordModal: document.getElementById('forgotPasswordModal'),
+    forgotPasswordForm: document.getElementById('forgot-password-form'),
+    forgotPasswordAlert: document.getElementById('forgot-password-alert'),
+    sendResetBtn: document.getElementById('send-reset-btn')
 };
 
 /**
@@ -113,17 +125,32 @@ function initializeFormHandlers() {
     // Send OTP handler
     elements.sendOtpBtn.addEventListener('click', handleSendOtp);
     
+    // Resend OTP handler
+    elements.resendOtpBtn.addEventListener('click', handleResendOtp);
+    
     // Verify OTP handler
     elements.verifyOtpBtn.addEventListener('click', handleVerifyOtp);
     
+    // Forgot password link handler
+    elements.forgotPasswordLink.addEventListener('click', handleForgotPasswordLink);
+    
+    // Forgot password form handler
+    elements.forgotPasswordForm.addEventListener('submit', handleForgotPasswordSubmit);
+    
     // Send verification code handler (signup)
     elements.sendVerificationBtn.addEventListener('click', handleSendVerificationCode);
+    
+    // Resend verification code handler
+    elements.resendVerificationBtn.addEventListener('click', handleResendVerificationCode);
     
     // Signup form handler
     elements.signupForm.addEventListener('submit', handleSignup);
     
     // Email verification code input handler
     document.getElementById('verification-code').addEventListener('input', handleVerificationCodeInput);
+    
+    // Load saved credentials if remember me was checked
+    loadSavedCredentials();
 }
 
 /**
@@ -188,6 +215,10 @@ async function handleLoginStep1(e) {
         
         if (result.success) {
             AppState.currentUser = result.user;
+            
+            // Save credentials if remember me is checked
+            saveCredentials(username, password);
+            
             showAlert('Credentials validated! Proceeding to two-factor authentication.', 'success');
             
             // Move to step 2
@@ -247,6 +278,10 @@ async function handleSendOtp() {
         if (result.success) {
             AppState.otpSent = true;
             showAlert('OTP sent to your email! Please check and enter the code.', 'success');
+            
+            // Show resend button and start timer
+            elements.resendOtpBtn.style.display = 'block';
+            AppState.otpTimer = startResendTimer(elements.resendOtpBtn, 60);
         } else {
             showAlert(result.message || 'Failed to send OTP.', 'danger');
         }
@@ -518,4 +553,168 @@ function isValidPassword(password) {
     // 8-12 characters with letters, numbers, and special characters
     const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{8,12}$/;
     return passwordRegex.test(password);
+}
+
+/**
+ * Handle resend OTP for login
+ */
+async function handleResendOtp() {
+    if (!AppState.currentUser) {
+        showAlert('Session expired. Please login again.', 'danger');
+        resetLoginSteps();
+        return;
+    }
+    
+    await handleSendOtp();
+}
+
+/**
+ * Handle resend verification code for signup
+ */
+async function handleResendVerificationCode() {
+    const email = document.getElementById('email').value;
+    
+    if (!email || !isValidEmail(email)) {
+        showAlert('Please enter a valid email address.', 'danger');
+        return;
+    }
+    
+    await handleSendVerificationCode();
+}
+
+/**
+ * Handle forgot password link click
+ */
+function handleForgotPasswordLink(e) {
+    e.preventDefault();
+    const modal = new bootstrap.Modal(elements.forgotPasswordModal);
+    modal.show();
+}
+
+/**
+ * Handle forgot password form submission
+ */
+async function handleForgotPasswordSubmit(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('reset-email').value;
+    
+    if (!email || !isValidEmail(email)) {
+        showForgotPasswordAlert('Please enter a valid email address.', 'danger');
+        return;
+    }
+    
+    try {
+        elements.sendResetBtn.disabled = true;
+        elements.sendResetBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+        
+        // AJAX call to send password reset email
+        const response = await fetch('auth.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `action=forgot_password&email=${encodeURIComponent(email)}`
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showForgotPasswordAlert('Password reset link sent to your email!', 'success');
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(elements.forgotPasswordModal);
+                modal.hide();
+            }, 2000);
+        } else {
+            showForgotPasswordAlert(result.message || 'Failed to send reset email.', 'danger');
+        }
+    } catch (error) {
+        showForgotPasswordAlert('Failed to send reset email. Please try again.', 'danger');
+        console.error('Forgot password error:', error);
+    } finally {
+        elements.sendResetBtn.disabled = false;
+        elements.sendResetBtn.innerHTML = '<i class="bi bi-send-fill me-2"></i>Send Reset Link';
+    }
+}
+
+/**
+ * Show alert in forgot password modal
+ * @param {string} message - Alert message
+ * @param {string} type - Alert type
+ */
+function showForgotPasswordAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    elements.forgotPasswordAlert.innerHTML = '';
+    elements.forgotPasswordAlert.appendChild(alertDiv);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        if (alertDiv && alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+/**
+ * Load saved credentials if remember me was checked
+ */
+function loadSavedCredentials() {
+    const savedUsername = localStorage.getItem('rememberedUsername');
+    const savedPassword = localStorage.getItem('rememberedPassword');
+    const rememberMe = localStorage.getItem('rememberMe') === 'true';
+    
+    if (rememberMe && savedUsername) {
+        document.getElementById('login-username').value = savedUsername;
+        elements.rememberMeCheckbox.checked = true;
+        
+        if (savedPassword) {
+            document.getElementById('login-password').value = savedPassword;
+        }
+    }
+}
+
+/**
+ * Save credentials if remember me is checked
+ */
+function saveCredentials(username, password) {
+    if (elements.rememberMeCheckbox.checked) {
+        localStorage.setItem('rememberedUsername', username);
+        localStorage.setItem('rememberedPassword', password);
+        localStorage.setItem('rememberMe', 'true');
+    } else {
+        localStorage.removeItem('rememberedUsername');
+        localStorage.removeItem('rememberedPassword');
+        localStorage.setItem('rememberMe', 'false');
+    }
+}
+
+/**
+ * Start countdown timer for resend buttons
+ * @param {HTMLElement} button - Button element
+ * @param {number} seconds - Countdown seconds
+ */
+function startResendTimer(button, seconds) {
+    let timeLeft = seconds;
+    const originalText = button.innerHTML;
+    
+    button.disabled = true;
+    
+    const timer = setInterval(() => {
+        button.innerHTML = `Resend in ${timeLeft}s`;
+        timeLeft--;
+        
+        if (timeLeft < 0) {
+            clearInterval(timer);
+            button.disabled = false;
+            button.innerHTML = originalText;
+        }
+    }, 1000);
+    
+    return timer;
 }
