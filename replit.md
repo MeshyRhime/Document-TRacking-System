@@ -1,7 +1,7 @@
 # Document Tracking System - Authentication Module
 
 ## Overview
-A complete web-based user authentication system built with PHP, PostgreSQL, HTML5, CSS3 (Bootstrap), and JavaScript. The system provides secure user registration with email verification and multi-factor login with OTP authentication.
+A complete web-based user authentication system built with PHP, MySQL, HTML5, CSS3 (Bootstrap), and JavaScript. The system provides secure user registration with email verification and multi-factor login with OTP authentication.
 
 ## Features Implemented
 

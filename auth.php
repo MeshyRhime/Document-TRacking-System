@@ -310,12 +310,13 @@ class AuthService {
      */
     public function sendVerificationCode($email) {
         try {
-            // Check if email already exists
-            $stmt = $this->db->prepare("SELECT id FROM users WHERE email = ?");
+            // Use count instead of fetching rows to avoid buffering issues
+            $stmt = $this->db->prepare("SELECT COUNT(*) as count FROM users WHERE email = ?");
             $stmt->execute([$email]);
-            $existingUsers = $stmt->fetchAll();
+            $result = $stmt->fetchAll();
+            $count = $result[0]['count'];
             
-            if (count($existingUsers) > 0) {
+            if ($count > 0) {
                 return [
                     'success' => false,
                     'message' => 'Email already registered'
