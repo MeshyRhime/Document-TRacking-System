@@ -26,12 +26,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
 
-// Database configuration using environment variables
-$db_host = $_ENV['PGHOST'] ?? 'localhost';
-$db_port = $_ENV['PGPORT'] ?? '5432';
-$db_name = $_ENV['PGDATABASE'] ?? 'postgres';
-$db_user = $_ENV['PGUSER'] ?? 'postgres';
-$db_pass = $_ENV['PGPASSWORD'] ?? '';
+// Database configuration for MySQL
+$db_host = 'localhost';
+$db_port = '8000';
+$db_name = 'auth_db';
+$db_user = 'root';
+$db_pass = '';
 
 // Email configuration
 $email_config = [
@@ -51,10 +51,11 @@ class Database {
     
     public function __construct($host, $port, $dbname, $username, $password) {
         try {
-            $dsn = "pgsql:host={$host};port={$port};dbname={$dbname}";
+            $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset=utf8mb4";
             $this->connection = new PDO($dsn, $username, $password, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
             ]);
         } catch (PDOException $e) {
             throw new Exception('Database connection failed: ' . $e->getMessage());

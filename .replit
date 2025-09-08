@@ -18,6 +18,10 @@ author = "agent"
 task = "workflow.run"
 args = "PHP Server"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "MySQL Server"
+
 [[workflows.workflow]]
 name = "PHP Server"
 author = "agent"
@@ -30,6 +34,26 @@ waitForPort = 5000
 [workflows.workflow.metadata]
 outputType = "webview"
 
+[[workflows.workflow]]
+name = "MySQL Server"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "rm -rf /tmp/mysql_data 2>/dev/null; mkdir -p /tmp/mysql_data && mysqld --initialize-insecure --datadir=/tmp/mysql_data --user=$(whoami) --log-error=/tmp/mysql_init.log 2>/dev/null; mysqld --datadir=/tmp/mysql_data --socket=/tmp/mysql.sock --port=8000 --pid-file=/tmp/mysql.pid --user=$(whoami) --bind-address=0.0.0.0"
+waitForPort = 8000
+
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 8000
+externalPort = 8000
+
+[[ports]]
+localPort = 33060
+externalPort = 3000
