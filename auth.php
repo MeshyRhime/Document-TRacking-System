@@ -28,10 +28,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // Database configuration for MySQL
 $db_host = 'localhost';
-$db_port = '8000';
+$db_port = '3306';
 $db_name = 'auth_db';
 $db_user = 'root';
 $db_pass = '';
+$db_socket = '/tmp/mysql.sock';
 
 // Email configuration
 $email_config = [
@@ -47,23 +48,50 @@ $email_config = [
  * Database connection class
  */
 class Database {
+    private static $instance = null;
     private $connection;
     
-    public function __construct($host, $port, $dbname, $username, $password) {
+    private function __construct($host, $port, $dbname, $username, $password) {
+        global $db_socket;
+        
         try {
-            $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset=utf8mb4";
+            // Try socket connection first, then TCP
+            if (file_exists($db_socket)) {
+                $dsn = "mysql:unix_socket={$db_socket};dbname={$dbname};charset=utf8mb4";
+            } else {
+                $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset=utf8mb4";
+            }
+            
             $this->connection = new PDO($dsn, $username, $password, [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4"
+                PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4",
+                PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
+                PDO::ATTR_TIMEOUT => 10
             ]);
+            
+            // Test the connection
+            $this->connection->exec("SELECT 1");
+            error_log("MySQL connected successfully using: " . $dsn);
         } catch (PDOException $e) {
+            error_log("Database connection error: " . $e->getMessage());
             throw new Exception('Database connection failed: ' . $e->getMessage());
         }
     }
     
+    public static function getInstance($host, $port, $dbname, $username, $password) {
+        if (self::$instance === null) {
+            self::$instance = new self($host, $port, $dbname, $username, $password);
+        }
+        return self::$instance;
+    }
+    
     public function getConnection() {
         return $this->connection;
+    }
+    
+    public function prepare($sql) {
+        return $this->connection->prepare($sql);
     }
 }
 
@@ -147,6 +175,7 @@ class AuthService {
             ");
             $stmt->execute([$username, $username]);
             $user = $stmt->fetch();
+            $stmt->closeCursor();
             
             if ($user && password_verify($password, $user['password'])) {
                 // Remove password from response
@@ -251,6 +280,7 @@ class AuthService {
             ");
             $stmt->execute([$email, $otp]);
             $otpRecord = $stmt->fetch();
+            $stmt->closeCursor();
             
             if ($otpRecord) {
                 // Mark OTP as used
@@ -283,7 +313,9 @@ class AuthService {
             // Check if email already exists
             $stmt = $this->db->prepare("SELECT id FROM users WHERE email = ?");
             $stmt->execute([$email]);
-            if ($stmt->fetch()) {
+            $existingUsers = $stmt->fetchAll();
+            
+            if (count($existingUsers) > 0) {
                 return [
                     'success' => false,
                     'message' => 'Email already registered'
@@ -366,6 +398,7 @@ class AuthService {
             ");
             $stmt->execute([$email, $code]);
             $codeRecord = $stmt->fetch();
+            $stmt->closeCursor();
             
             if ($codeRecord) {
                 // Mark code as used
@@ -409,7 +442,10 @@ class AuthService {
             // Check for existing username or email
             $stmt = $this->db->prepare("SELECT id FROM users WHERE username = ? OR email = ? OR id_number = ?");
             $stmt->execute([$data['username'], $data['email'], $data['idNumber']]);
-            if ($stmt->fetch()) {
+            $existingRecord = $stmt->fetch();
+            $stmt->closeCursor();
+            
+            if ($existingRecord) {
                 return [
                     'success' => false,
                     'message' => 'Username, email, or ID number already exists'
@@ -465,6 +501,7 @@ class AuthService {
             $stmt = $this->db->prepare("SELECT id, first_name, username FROM users WHERE email = ?");
             $stmt->execute([$email]);
             $user = $stmt->fetch();
+            $stmt->closeCursor();
             
             if (!$user) {
                 return [
@@ -541,7 +578,7 @@ class AuthService {
 
 // Initialize services
 try {
-    $database = new Database($db_host, $db_port, $db_name, $db_user, $db_pass);
+    $database = Database::getInstance($db_host, $db_port, $db_name, $db_user, $db_pass);
     $emailService = new EmailService($email_config);
     $authService = new AuthService($database, $emailService);
 } catch (Exception $e) {
