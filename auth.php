@@ -454,6 +454,88 @@ class AuthService {
             ];
         }
     }
+    
+    /**
+     * Send password reset email
+     */
+    public function sendPasswordReset($email) {
+        try {
+            // Check if email exists
+            $stmt = $this->db->prepare("SELECT id, first_name, username FROM users WHERE email = ?");
+            $stmt->execute([$email]);
+            $user = $stmt->fetch();
+            
+            if (!$user) {
+                return [
+                    'success' => false,
+                    'message' => 'Email address not found'
+                ];
+            }
+            
+            // Generate reset token
+            $resetToken = $this->emailService->generateOTP();
+            $expires_at = date('Y-m-d H:i:s', strtotime('+30 minutes'));
+            
+            // Store reset token
+            $stmt = $this->db->prepare("
+                INSERT INTO otp_codes (email, otp_code, expires_at) 
+                VALUES (?, ?, ?)
+            ");
+            $stmt->execute([$email, $resetToken, $expires_at]);
+            
+            // Send email
+            $subject = 'Password Reset - Document Tracking System';
+            $message = "
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                        .header { background: linear-gradient(135deg, #ff9966, #e68553); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+                        .reset-token { background: #fff; border: 2px solid #ff9966; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; color: #e68553; margin: 20px 0; border-radius: 8px; }
+                        .warning { color: #dc3545; font-size: 14px; margin-top: 15px; }
+                    </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <div class='header'>
+                            <h1>Document Tracking System</h1>
+                            <p>Password Reset Request</p>
+                        </div>
+                        <div class='content'>
+                            <h2>Hello {$user['first_name']},</h2>
+                            <p>We received a request to reset your password for username: <strong>{$user['username']}</strong></p>
+                            <p>Please use the following reset code to create a new password:</p>
+                            <div class='reset-token'>{$resetToken}</div>
+                            <p>This code will expire in 30 minutes.</p>
+                            <p class='warning'>⚠️ If you didn't request this password reset, please ignore this email and contact support immediately.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            ";
+            
+            $emailSent = $this->emailService->sendEmail($email, $subject, $message);
+            
+            if ($emailSent) {
+                return [
+                    'success' => true,
+                    'message' => 'Password reset code sent to your email'
+                ];
+            }
+            
+            return [
+                'success' => false,
+                'message' => 'Failed to send password reset email'
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Error sending password reset: ' . $e->getMessage()
+            ];
+        }
+    }
 }
 
 // Initialize services
@@ -504,6 +586,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
         case 'signup':
             echo json_encode($authService->registerUser($_POST));
+            break;
+            
+        case 'forgot_password':
+            $email = $_POST['email'] ?? '';
+            echo json_encode($authService->sendPasswordReset($email));
             break;
             
         default:
