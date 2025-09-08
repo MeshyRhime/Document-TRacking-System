@@ -51,6 +51,19 @@
                                         </button>
                                     </div>
                                 </div>
+                                
+                                <div class="mb-3 d-flex justify-content-between align-items-center">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="remember-me">
+                                        <label class="form-check-label" for="remember-me">
+                                            Remember me
+                                        </label>
+                                    </div>
+                                    <a href="#" class="text-decoration-none" id="forgot-password-link">
+                                        <i class="bi bi-question-circle me-1"></i>Forgot Password?
+                                    </a>
+                                </div>
+                                
                                 <button type="submit" class="btn btn-primary w-100">Login</button>
                             </form>
 
@@ -79,6 +92,9 @@
                                 </div>
                                 <div class="d-grid gap-2">
                                     <button type="button" class="btn btn-secondary" id="send-otp">Send OTP</button>
+                                    <button type="button" class="btn btn-outline-secondary" id="resend-otp" style="display: none;">
+                                        <i class="bi bi-arrow-clockwise me-2"></i>Resend OTP
+                                    </button>
                                     <button type="button" class="btn btn-primary" id="verify-otp">Verify & Login</button>
                                 </div>
                             </div>
@@ -154,7 +170,12 @@
                                     <label for="verification-code" class="form-label">
                                         <i class="bi bi-shield-check-fill me-2"></i>Verification Code
                                     </label>
-                                    <input type="text" class="form-control" id="verification-code" maxlength="6">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="verification-code" maxlength="6">
+                                        <button type="button" class="btn btn-outline-secondary" id="resend-verification">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div class="mb-3">
@@ -184,6 +205,37 @@
                             </form>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="forgotPasswordModalLabel">
+                        <i class="bi bi-key-fill me-2"></i>Reset Password
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="forgot-password-alert"></div>
+                    <form id="forgot-password-form">
+                        <div class="mb-3">
+                            <label for="reset-email" class="form-label">
+                                <i class="bi bi-envelope-fill me-2"></i>Email Address
+                            </label>
+                            <input type="email" class="form-control" id="reset-email" required
+                                   placeholder="Enter your registered email address">
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" id="send-reset-btn">
+                                <i class="bi bi-send-fill me-2"></i>Send Reset Link
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
